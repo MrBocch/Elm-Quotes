@@ -1,56 +1,86 @@
-module Main exposing (main)
+module Main exposing (..)
 
 import Browser
 
 import Html exposing (..)
+import Html.Attributes exposing (..)
+
+import Http
+import Json.Decode as Decode
+import Http exposing (expectJson)
+
+baseUrl = "https://api.quotable.io/"
 
 main =
-    Browser.sandbox
-        { init = initModel
+    Browser.element
+        { init = init
         , view = view
         , update = update
+        , subscriptions = subscriptions
         }
+
+
+-- msg
+type Msg
+    = LoadQuote (Result Http.Error Quote)
+
 
 -- Model
 
 type alias Quote =
-    { id : String
-    , content : String
+    { content : String
     , author : String
     , tags : List String
-    , authorSlug : String
-    , length : Int
-    , dateAdded : String
-    , dateModified : String
     }
 
 type alias Model =
-    { quotes : Quote }
+    Quote
 
-initModel : Model
+initModel :Model
 initModel =
-    { quotes =  quote1 }
+    quote1
+
+
+init : () -> (Model, Cmd Msg)
+init _ =
+    ( initModel
+    , Http.get
+        { url = (baseUrl ++ "random")
+        , expect = Http.expectJson LoadQuote quoteDecoder
+        }
+    )
 
 quote1 : Quote
 quote1 =
-    { id = "test"
-    , content = "El mas callado es el que menos habla"
+    { content = "El mas callado es el que menos habla"
     , author = "nose"
     , tags = ["nose", "nose"]
-    , authorSlug = "idk"
-    , length = String.length "El mas callado es el que menos habla"
-    , dateAdded = "2024-04-01"
-    , dateModified = "2023-01-01"
     }
+
+
 -- VIEW
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
-    div []
-        [ h1 [] [ text model.quotes.content ]
-        , h3 [] [text ("~ " ++ model.quotes.author) ]
+    div [ class "quote-box" ]
+        [ h1 [ class "quote" ] [ text model.content ]
+        , h3 [ class "author" ] [text ("~ " ++ model.author) ]
         ]
 
+
 -- update
-update : msg -> Model -> Model
-update msg model = model
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model = (model, Cmd.none)
+
+
+-- subscriptions
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+-- JSON
+quoteDecoder =
+    Decode.map3 Quote
+        (Decode.field "content" Decode.string)
+        (Decode.field "author" Decode.string)
+        (Decode.field "tags" (Decode.list Decode.string))
