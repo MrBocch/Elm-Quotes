@@ -40,3 +40,20 @@ body {
   margin: 0;
   font-style: italic;
 }
+
+button {
+    all: unset;
+    padding: 10px;
+    margin-top: 1em;
+
+    max-width: 700px;
+
+    background: #fffdf5;
+    border-radius: 6px;
+    border: 2px solid #8b7d5d;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}

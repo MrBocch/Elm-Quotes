@@ -8,6 +8,7 @@ import Html.Attributes exposing (..)
 import Http
 import Json.Decode as Decode
 import Http exposing (expectJson)
+import Html.Events exposing (onClick)
 
 baseUrl = "https://api.quotable.io/"
 
@@ -22,7 +23,8 @@ main =
 
 -- msg
 type Msg
-    = LoadQuote (Result Http.Error Quote)
+    = GetQuote
+    | LoadQuote (Result Http.Error Quote)
 
 
 -- Model
@@ -44,11 +46,15 @@ initModel =
 init : () -> (Model, Cmd Msg)
 init _ =
     ( initModel
-    , Http.get
+    , fetchQuote
+    )
+
+fetchQuote =
+    Http.get
         { url = (baseUrl ++ "random")
         , expect = Http.expectJson LoadQuote quoteDecoder
         }
-    )
+
 
 quote1 : Quote
 quote1 =
@@ -57,23 +63,40 @@ quote1 =
     , tags = ["nose", "nose"]
     }
 
+cantLoad : Quote
+cantLoad =
+    { content = "Cant load in data ;("
+    , author = "sorry"
+    , tags = ["nose", "nose"]
+    }
+
 
 -- VIEW
 
 view : Model -> Html Msg
 view model =
-    div [ class "quote-box" ]
-        [ h1 [ class "quote" ] [ text model.content ]
-        , h3 [ class "author" ] [text ("~ " ++ model.author) ]
+    main_ []
+        [ div [ class "quote-box" ]
+            [ h1 [ class "quote" ] [ text model.content ]
+            , h3 [ class "author" ] [text ("~ " ++ model.author) ]
+            ]
+        , button [ onClick GetQuote ] [ text "next" ]
         ]
 
 
 -- update
 update : Msg -> Model -> (Model, Cmd Msg)
-update msg model = (model, Cmd.none)
+update msg model =
+    case msg of
+        LoadQuote resp ->
+            case resp of
+                Ok quote -> (quote, Cmd.none)
+                Err res ->  (cantLoad, Cmd.none)
+        GetQuote ->
+            (model, fetchQuote)
 
 
--- subscriptions
+-- subscriptions (so what is this for?)
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
